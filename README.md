@@ -1,54 +1,50 @@
-# XX市软件产业人才公共服务平台
+# 软件产业人才公共服务平台
 
-太原理工大学毕业实习项目
+> 太原理工大学毕业实习项目 · XX市软件产业人才公共服务平台 MVP
 
 ## 技术栈
 
-| 层级 | 技术 |
-|------|------|
+| 层 | 技术 |
+|---|---|
 | 前端 | Vue 3 + Vite + Element Plus + Pinia + Vue Router |
 | 后端 | Spring Boot 3.2 + Spring Security + JWT + Spring Data JPA |
 | 数据库 | MySQL 8.0（Docker） |
 
-## 项目结构
+## 功能模块
 
-```
-talent-platform/
-├── backend/     # Spring Boot 后端
-├── frontend/    # Vue 3 前端
-└── README.md
-```
+- **门户首页**：新闻公告、数据概览
+- **人才库**：人才档案 CRUD、技能展示
+- **岗位中心**：岗位发布、申请管理
+- **智能匹配**：按技能关键词匹配岗位
+- **终生学习**：课程列表、在线报名
+- **政策法规**：政策/资讯/公告管理
+- **后台管理**：用户管理、数据统计
 
 ## 快速启动
 
-### 1. 启动数据库（Docker）
+### 1. 启动 MySQL（Docker）
 
 ```bash
 docker run -d \
   --name mysql8 \
   -p 3306:3306 \
   -v ~/docker/mysql/data:/var/lib/mysql \
-  -v ~/docker/mysql/conf:/etc/mysql/conf.d \
-  -v ~/docker/mysql/log:/var/log/mysql \
   -e MYSQL_ROOT_PASSWORD=root \
   -e MYSQL_CHARACTER_SET_SERVER=utf8mb4 \
-  -e MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci \
   --restart=always \
   mysql:8.0
-```
 
-创建数据库：
-
-```sql
-CREATE DATABASE talent_platform CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+docker exec mysql8 mysql -uroot -proot -e \
+  "CREATE DATABASE IF NOT EXISTS talent_platform CHARACTER SET utf8mb4;"
 ```
 
 ### 2. 启动后端
 
 ```bash
 cd backend
-mvn spring-boot:run
-# 后端运行在 http://localhost:8080
+mvn package -DskipTests
+java -jar target/platform-0.0.1-SNAPSHOT.jar
+# 访问 http://localhost:8080
 ```
 
 ### 3. 启动前端
@@ -57,21 +53,31 @@ mvn spring-boot:run
 cd frontend
 npm install
 npm run dev
-# 前端运行在 http://localhost:5173
+# 访问 http://localhost:5173
 ```
 
-## 默认账户
+## 默认账号
 
-| 角色 | 用户名 | 密码 |
-|------|--------|------|
-| 管理员 | admin | admin123 |
+首次运行后，调用注册接口或通过前端注册页面创建管理员账号（role 选 ADMIN）。
 
-## 模块说明
+## 项目结构
 
-- **门户首页**：新闻公告、政策法规展示
-- **人才库**：人才信息 CRUD、档案管理
-- **岗位管理**：企业发布岗位、人才申请
-- **智能匹配**：基于技能关键词的人才-岗位匹配
-- **终生学习**：课程列表、报名管理
-- **政策宣传**：政策文章发布与展示
-- **后台管理**：用户管理、数据统计
+```
+project-demo/
+├── backend/          # Spring Boot 后端
+│   ├── pom.xml
+│   └── src/main/java/com/talent/platform/
+│       ├── controller/
+│       ├── entity/
+│       ├── repository/
+│       ├── service/
+│       ├── security/
+│       └── config/
+└── frontend/         # Vue 3 前端
+    ├── package.json
+    └── src/
+        ├── views/
+        ├── api/
+        ├── stores/
+        └── router/
+```

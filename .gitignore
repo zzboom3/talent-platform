@@ -4,32 +4,44 @@ target/
 *.jar
 *.war
 *.ear
-*.log
-.mvn/
-!.mvn/wrapper/maven-wrapper.jar
-!.mvn/wrapper/maven-wrapper.properties
+*.nar
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+.mvn/wrapper/maven-wrapper.jar
 
 # ===== Spring Boot =====
-*.iml
-*.iws
-*.ipr
-.idea/
-*.DS_Store
-application-local.yml
-application-prod.yml
+HELP.md
+spring-shell.log
 
-# ===== Node / Vue =====
+# ===== Node / Frontend =====
 node_modules/
 dist/
-.vite/
+dist-ssr/
 *.local
+.cache/
+
+# ===== IDE =====
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# ===== Logs =====
+*.log
+logs/
+
+# ===== Env / Secrets =====
+.env
 .env.local
 .env.*.local
 
 # ===== OS =====
 .DS_Store
 Thumbs.db
-
-# ===== Editor =====
-.vscode/settings.json
-.cursor/
