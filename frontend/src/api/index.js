@@ -63,3 +63,8 @@ export const adminApi = {
   updateRole: (id, role) => request.put(`/admin/users/${id}/role`, { role }),
   stats: () => request.get('/admin/stats'),
 }
+
+// 公开统计，无需登录，供首页使用
+export const statsApi = {
+  public: () => request.get('/stats'),
+}

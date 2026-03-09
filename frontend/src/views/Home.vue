@@ -62,7 +62,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { newsApi, adminApi } from '@/api'
+import { newsApi, statsApi } from '@/api'
 
 const newsList = ref([])
 const announcements = ref([])
@@ -79,7 +79,7 @@ onMounted(async () => {
     newsList.value = res.data.filter(n => n.category !== 'ANNOUNCE').slice(0, 8)
     announcements.value = res.data.filter(n => n.category === 'ANNOUNCE').slice(0, 5)
   }
-  const statsRes = await adminApi.stats().catch(() => null)
+  const statsRes = await statsApi.public().catch(() => null)
   if (statsRes?.code === 200) {
     const d = statsRes.data
     stats.value = [

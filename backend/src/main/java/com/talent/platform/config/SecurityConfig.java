@@ -39,8 +39,21 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/news/**", "/api/courses/**",
                         "/api/talents/**", "/api/jobs/**", "/api/match/**",
                         "/api/policies/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/stats").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((req, res, e) -> {
+                    res.setStatus(401);
+                    res.setContentType("application/json;charset=UTF-8");
+                    res.getWriter().write("{\"code\":401,\"message\":\"请先登录\"}");
+                })
+                .accessDeniedHandler((req, res, e) -> {
+                    res.setStatus(403);
+                    res.setContentType("application/json;charset=UTF-8");
+                    res.getWriter().write("{\"code\":403,\"message\":\"权限不足\"}");
+                })
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
