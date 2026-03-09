@@ -32,6 +32,7 @@ export const companyApi = {
 export const applicationApi = {
   apply: (jobId) => request.post('/applications', { jobId }),
   my: () => request.get('/applications/my'),
+  companyApplications: () => request.get('/applications/company'),
   updateStatus: (id, status) => request.put(`/applications/${id}/status`, { status }),
 }
 

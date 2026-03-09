@@ -1,10 +1,12 @@
 package com.talent.platform.controller;
 
 import com.talent.platform.common.Result;
+import com.talent.platform.entity.Company;
 import com.talent.platform.entity.Job;
 import com.talent.platform.entity.JobApplication;
 import com.talent.platform.entity.TalentProfile;
 import com.talent.platform.entity.User;
+import com.talent.platform.repository.CompanyRepository;
 import com.talent.platform.repository.JobApplicationRepository;
 import com.talent.platform.repository.JobRepository;
 import com.talent.platform.repository.TalentProfileRepository;
@@ -26,6 +28,7 @@ public class ApplicationController {
     private final TalentProfileRepository talentRepo;
     private final JobRepository jobRepo;
     private final UserRepository userRepo;
+    private final CompanyRepository companyRepo;
 
     @PostMapping
     public Result<?> apply(@RequestBody Map<String, Long> body,
@@ -54,9 +57,9 @@ public class ApplicationController {
     @GetMapping("/company")
     public Result<List<JobApplication>> companyApplications(@AuthenticationPrincipal UserDetails userDetails) {
         User user = userRepo.findByUsername(userDetails.getUsername()).orElseThrow();
-        return Result.ok(appRepo.findByJobCompanyId(
-                user.getId()
-        ));
+        Company company = companyRepo.findByUser(user).orElse(null);
+        if (company == null) return Result.ok(List.of());
+        return Result.ok(appRepo.findByJobCompanyId(company.getId()));
     }
 
     @PutMapping("/{id}/status")

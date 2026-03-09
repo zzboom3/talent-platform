@@ -72,11 +72,14 @@ async function enroll(courseId) {
   if (!store.isLoggedIn) { ElMessage.warning('请先登录'); return }
   const res = await courseApi.enroll(courseId)
   if (res.code === 200) {
-    ElMessage.success('报名成功')
-    enrolledIds.value.add(courseId)
-    const r = await courseApi.myEnrollments()
-    if (r.code === 200) myEnrollments.value = r.data
-  } else ElMessage.error(res.message)
+      ElMessage.success('报名成功')
+      enrolledIds.value = new Set([...enrolledIds.value, courseId])
+      const r = await courseApi.myEnrollments()
+      if (r.code === 200) {
+        myEnrollments.value = r.data
+        enrolledIds.value = new Set(r.data.map(e => e.course.id))
+      }
+    } else ElMessage.error(res.message)
 }
 </script>
 

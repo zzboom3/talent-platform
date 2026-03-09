@@ -54,19 +54,28 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
-import { jobApi, applicationApi } from '@/api'
+import { jobApi, applicationApi, companyApi } from '@/api'
 import { useUserStore } from '@/stores/user'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 const store = useUserStore()
+const router = useRouter()
 const list = ref([])
 const keyword = ref('')
 const dialogVisible = ref(false)
 const form = reactive({ title: '', city: '', salaryRange: '', requirements: '', description: '' })
 const isTalent = computed(() => store.isTalent)
 const isEnterprise = computed(() => store.isEnterprise)
+const hasCompany = ref(false)
 
-onMounted(loadAll)
+onMounted(async () => {
+  loadAll()
+  if (store.isEnterprise) {
+    const r = await companyApi.getMy().catch(() => null)
+    hasCompany.value = r?.code === 200
+  }
+})
 
 async function loadAll() {
   const res = await jobApi.list()
@@ -84,7 +93,15 @@ async function doSearch() {
   }
 }
 
-function openCreate() { Object.assign(form, { title: '', city: '', salaryRange: '', requirements: '', description: '' }); dialogVisible.value = true }
+function openCreate() {
+  if (!hasCompany.value) {
+    ElMessage.warning('请先前往"企业信息"页面完善公司资料，再发布岗位')
+    router.push('/company')
+    return
+  }
+  Object.assign(form, { title: '', city: '', salaryRange: '', requirements: '', description: '' })
+  dialogVisible.value = true
+}
 
 async function saveJob() {
   const res = await jobApi.create(form)
@@ -106,7 +123,7 @@ async function deleteJob(id) {
   if (res.code === 200) { ElMessage.success('已删除'); loadAll() }
 }
 
-const isMyJob = (job) => job.company?.user?.id == store.userId
+const isMyJob = (job) => String(job.company?.user?.id) === String(store.userId)
 </script>
 
 <style scoped>

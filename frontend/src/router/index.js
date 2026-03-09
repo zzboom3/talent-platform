@@ -14,6 +14,16 @@ const routes = [
   { path: '/policies', component: () => import('@/views/PolicyList.vue') },
   { path: '/policies/:id', component: () => import('@/views/PolicyDetail.vue') },
   {
+    path: '/company',
+    component: () => import('@/views/CompanyProfile.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/my-applications',
+    component: () => import('@/views/MyApplications.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/admin',
     component: () => import('@/views/admin/Dashboard.vue'),
     meta: { requiresAdmin: true },
@@ -43,6 +53,9 @@ const router = createRouter({
 router.beforeEach((to) => {
   const store = useUserStore()
   if (to.meta.requiresAdmin && !store.isAdmin) {
+    return '/login'
+  }
+  if (to.meta.requiresAuth && !store.isLoggedIn) {
     return '/login'
   }
   if ((to.path === '/login' || to.path === '/register') && store.isLoggedIn) {
