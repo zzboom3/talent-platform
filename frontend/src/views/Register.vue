@@ -30,6 +30,9 @@
       <div style="text-align:center;margin-top:16px;color:#666">
         已有账号？<el-link type="primary" @click="$router.push('/login')">立即登录</el-link>
       </div>
+      <div style="text-align:center;margin-top:12px;color:#aaa;font-size:12px">
+        管理员账号为系统内置，请使用 admin / admin123 登录
+      </div>
     </el-card>
   </div>
 </template>
