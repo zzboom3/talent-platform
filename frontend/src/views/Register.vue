@@ -31,7 +31,10 @@
         已有账号？<el-link type="primary" @click="$router.push('/login')">立即登录</el-link>
       </div>
       <div style="text-align:center;margin-top:12px;color:#aaa;font-size:12px">
-        管理员账号为系统内置，请使用 admin / admin123 登录
+        管理员账号为系统内置
+      </div>
+      <div style="text-align:center;margin-top:8px">
+        <el-link type="info" :underline="false" @click="$router.push('/')">← 返回首页</el-link>
       </div>
     </el-card>
   </div>
@@ -78,14 +81,19 @@ async function handleRegister() {
 
 <style scoped>
 .auth-wrap {
-  min-height: calc(100vh - 60px);
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #e8f4f8, #d6eaf8);
+  padding: 24px;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 50%, #90caf9 100%);
 }
-.auth-card { width: 440px; border-radius: 12px; }
+.auth-card {
+  width: 440px;
+  border-radius: var(--tp-radius);
+  box-shadow: var(--tp-shadow-hover);
+}
 .auth-title { text-align: center; margin-bottom: 28px; }
-.auth-title h2 { font-size: 24px; color: #1a73e8; }
-.auth-title p { color: #999; margin-top: 6px; }
+.auth-title h2 { font-size: 24px; color: var(--tp-primary); font-weight: 600; }
+.auth-title p { color: var(--tp-text-secondary); margin-top: 8px; font-size: 14px; }
 </style>

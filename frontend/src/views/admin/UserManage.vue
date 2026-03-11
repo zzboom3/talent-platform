@@ -3,10 +3,14 @@
     <div class="admin-sidebar">
       <div class="sidebar-title">🛠 后台管理</div>
       <el-menu :default-active="$route.path" router>
-        <el-menu-item index="/admin"><el-icon><DataAnalysis /></el-icon>数据概览</el-menu-item>
-        <el-menu-item index="/admin/users"><el-icon><User /></el-icon>用户管理</el-menu-item>
-        <el-menu-item index="/admin/news"><el-icon><Document /></el-icon>资讯管理</el-menu-item>
-        <el-menu-item index="/admin/courses"><el-icon><Reading /></el-icon>课程管理</el-menu-item>
+        <el-menu-item index="/admin">📊 数据概览</el-menu-item>
+        <el-menu-item index="/admin/users">👤 用户管理</el-menu-item>
+        <el-menu-item index="/admin/news">📰 资讯管理</el-menu-item>
+        <el-menu-item index="/admin/courses">📚 课程管理</el-menu-item>
+        <el-menu-item index="/admin/companies">🏢 企业管理</el-menu-item>
+        <el-menu-item index="/admin/showcase">⭐ 人才管理</el-menu-item>
+        <el-menu-item index="/admin/monitor">📈 系统监控</el-menu-item>
+        <el-menu-item index="/admin/blockchain">🔗 区块链管理</el-menu-item>
       </el-menu>
     </div>
     <div class="admin-content">
@@ -78,7 +82,9 @@ async function updateRole(row) {
 
 <style scoped>
 .admin-wrap { display: flex; min-height: calc(100vh - 60px); }
-.admin-sidebar { width: 200px; background: #fff; border-right: 1px solid #eee; flex-shrink: 0; }
-.sidebar-title { padding: 20px 16px; font-weight: bold; font-size: 15px; color: #1a73e8; border-bottom: 1px solid #eee; }
-.admin-content { flex: 1; padding: 32px; background: #f5f7fa; }
+.admin-sidebar { width: 200px; background: var(--tp-card); border-right: 1px solid var(--tp-border); flex-shrink: 0; }
+.sidebar-title { padding: 20px 16px; font-weight: bold; font-size: 15px; color: var(--tp-primary); border-bottom: 1px solid var(--tp-border); }
+.admin-content { flex: 1; padding: 32px; background: var(--tp-bg); }
+.admin-content h2 { color: var(--tp-text); font-weight: 600; }
+.admin-content :deep(.el-table) { border-radius: var(--tp-radius-sm); }
 </style>

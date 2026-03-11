@@ -33,4 +33,13 @@ public class CourseEnrollment {
 
     @Column
     private Integer progress = 0;
+
+    @Column(name = "study_hours")
+    private Double studyHours = 0.0;
+
+    @Column(name = "last_study_time")
+    private LocalDateTime lastStudyTime;
+
+    @Column(length = 20)
+    private String status = "LEARNING";
 }

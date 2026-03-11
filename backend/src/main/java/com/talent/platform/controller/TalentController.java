@@ -22,12 +22,17 @@ public class TalentController {
 
     @GetMapping
     public Result<List<TalentProfile>> list() {
-        return Result.ok(talentRepo.findAll());
+        return Result.ok(talentRepo.findByVisibleTrue());
+    }
+
+    @GetMapping("/showcase")
+    public Result<List<TalentProfile>> showcase() {
+        return Result.ok(talentRepo.findByVisibleTrueAndFeaturedTrueOrderByFeaturedOrderAsc());
     }
 
     @GetMapping("/{id}")
     public Result<TalentProfile> getById(@PathVariable Long id) {
-        return talentRepo.findById(id)
+        return talentRepo.findByIdAndVisibleTrue(id)
                 .map(Result::ok)
                 .orElse(Result.fail("人才档案不存在"));
     }
@@ -66,9 +71,21 @@ public class TalentController {
         profile.setRealName(updated.getRealName());
         profile.setSkills(updated.getSkills());
         profile.setEducation(updated.getEducation());
+        profile.setGender(updated.getGender());
+        profile.setGraduationSchool(updated.getGraduationSchool());
+        profile.setMajor(updated.getMajor());
+        profile.setWorkYears(updated.getWorkYears());
+        profile.setExpectedPosition(updated.getExpectedPosition());
+        profile.setExpectedSalary(updated.getExpectedSalary());
         profile.setExperience(updated.getExperience());
+        profile.setProjectExperience(updated.getProjectExperience());
+        profile.setSelfIntroduction(updated.getSelfIntroduction());
+        profile.setCertificates(updated.getCertificates());
         profile.setCity(updated.getCity());
         profile.setAvatarUrl(updated.getAvatarUrl());
+        if (updated.getStatus() != null) {
+            profile.setStatus(updated.getStatus());
+        }
         return Result.ok(talentRepo.save(profile));
     }
 

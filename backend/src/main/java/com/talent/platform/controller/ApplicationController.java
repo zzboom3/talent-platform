@@ -11,6 +11,7 @@ import com.talent.platform.repository.JobApplicationRepository;
 import com.talent.platform.repository.JobRepository;
 import com.talent.platform.repository.TalentProfileRepository;
 import com.talent.platform.repository.UserRepository;
+import com.talent.platform.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,6 +30,7 @@ public class ApplicationController {
     private final JobRepository jobRepo;
     private final UserRepository userRepo;
     private final CompanyRepository companyRepo;
+    private final NotificationService notificationService;
 
     @PostMapping
     public Result<?> apply(@RequestBody Map<String, Long> body,
@@ -39,11 +41,18 @@ public class ApplicationController {
         Long jobId = body.get("jobId");
         Job job = jobRepo.findById(jobId).orElse(null);
         if (job == null) return Result.fail("岗位不存在");
+        if (job.getCompany() == null
+                || job.getCompany().getAuditStatus() != Company.AuditStatus.APPROVED
+                || !Boolean.TRUE.equals(job.getCompany().getVisible())) {
+            return Result.fail("岗位不存在或已隐藏");
+        }
         if (appRepo.existsByTalentAndJobId(talent, jobId)) return Result.fail("已申请过该岗位");
         JobApplication app = new JobApplication();
         app.setTalent(talent);
         app.setJob(job);
-        return Result.ok(appRepo.save(app));
+        app = appRepo.save(app);
+        notificationService.notifyApplicationNew(app);
+        return Result.ok(app);
     }
 
     @GetMapping("/my")
@@ -59,7 +68,7 @@ public class ApplicationController {
         User user = userRepo.findByUsername(userDetails.getUsername()).orElseThrow();
         Company company = companyRepo.findByUser(user).orElse(null);
         if (company == null) return Result.ok(List.of());
-        return Result.ok(appRepo.findByJobCompanyId(company.getId()));
+        return Result.ok(appRepo.findByJob_Company_Id(company.getId()));
     }
 
     @PutMapping("/{id}/status")
@@ -72,6 +81,12 @@ public class ApplicationController {
         } catch (Exception e) {
             return Result.fail("状态值无效");
         }
-        return Result.ok(appRepo.save(app));
+        app = appRepo.save(app);
+        if (app.getStatus() == JobApplication.Status.ACCEPTED) {
+            notificationService.notifyApplicationAccepted(app);
+        } else if (app.getStatus() == JobApplication.Status.REJECTED) {
+            notificationService.notifyApplicationRejected(app);
+        }
+        return Result.ok(app);
     }
 }

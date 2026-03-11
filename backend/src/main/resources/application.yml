@@ -1,5 +1,9 @@
 server:
   port: 8080
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
 
 spring:
   datasource:
@@ -11,6 +15,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+    open-in-view: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -22,6 +27,17 @@ spring:
 jwt:
   secret: talent-platform-secret-key-must-be-at-least-256-bits-long-for-hs256
   expiration: 86400000
+
+aliyun:
+  oss:
+    endpoint: ${OSS_ENDPOINT:https://oss-cn-chengdu.aliyuncs.com}
+    access-key-id: ${OSS_ACCESS_KEY_ID:}
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET:}
+    bucket-name: ${OSS_BUCKET_NAME:talent-platform-files}
+
+deepseek:
+  api-key: ${DEEPSEEK_API_KEY:}
+  base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
 
 logging:
   level:

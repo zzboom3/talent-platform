@@ -1,17 +1,31 @@
 <template>
-  <div class="page-wrap">
+  <div class="page-wrap" v-loading="loading">
     <div class="page-header">
-      <h2>岗位列表</h2>
-      <div style="display:flex;gap:12px;align-items:center">
-        <el-input v-model="keyword" placeholder="搜索岗位" prefix-icon="Search"
-          clearable style="width:220px" @keyup.enter="doSearch" @clear="loadAll" />
-        <el-button type="primary" @click="doSearch">搜索</el-button>
-        <el-button v-if="isEnterprise" type="success" @click="openCreate">发布岗位</el-button>
+      <div class="page-title-block">
+        <h2>岗位列表</h2>
+        <p class="page-intro">京州市优质企业发布的软件岗位，支持按关键词、城市、企业和薪资范围组合筛选</p>
+        <div class="page-stats">
+          <el-tag type="info" effect="plain" size="large">
+            共 {{ stats.jobs ?? jobs.length }} 个岗位
+            <span v-if="hasActiveFilters" class="stats-filtered"> · 当前展示 {{ filteredJobs.length }} 个</span>
+          </el-tag>
+        </div>
       </div>
     </div>
 
+    <JobSearchPanel
+      :filters="filters"
+      :options="filterOptions"
+      @update:filters="updateFilters"
+      @reset="resetFilters"
+    >
+      <template #actions>
+        <el-button v-if="isEnterprise" type="success" @click="$router.push('/company/jobs')">岗位管理</el-button>
+      </template>
+    </JobSearchPanel>
+
     <el-row :gutter="20">
-      <el-col :span="8" v-for="job in list" :key="job.id">
+      <el-col :span="8" v-for="job in filteredJobs" :key="job.id">
         <el-card shadow="hover" class="job-card">
           <div class="job-title">{{ job.title }}</div>
           <div class="job-company">{{ job.company?.companyName || '未知企业' }}</div>
@@ -19,7 +33,7 @@
           <div class="job-salary">💰 {{ job.salaryRange || '薪资面议' }}</div>
           <div style="margin-top:12px;display:flex;gap:8px">
             <el-button size="small" @click="$router.push(`/jobs/${job.id}`)">查看详情</el-button>
-            <el-button v-if="isTalent" size="small" type="primary" @click="apply(job.id)">
+            <el-button v-if="isTalent" size="small" type="primary" :loading="applyingId === job.id" :disabled="applyingId != null" @click="apply(job.id)">
               申请岗位
             </el-button>
             <el-button v-if="isEnterprise && isMyJob(job)" size="small" type="danger"
@@ -28,97 +42,117 @@
         </el-card>
       </el-col>
     </el-row>
-    <el-empty v-if="!list.length" description="暂无岗位信息" />
+    <el-empty v-if="!filteredJobs.length" :description="hasActiveFilters ? '未找到符合条件的岗位' : '暂无岗位信息'" class="empty-with-actions">
+      <p class="empty-tip">{{ hasActiveFilters ? '可以调整筛选条件，查看更多岗位机会' : '当前没有可用的招聘岗位，请稍后再来' }}</p>
+      <el-button v-if="hasActiveFilters" @click="resetFilters">清空筛选</el-button>
+      <el-button type="primary" @click="loadAll">刷新列表</el-button>
+    </el-empty>
 
-    <!-- 发布/编辑岗位弹窗 -->
-    <el-dialog v-model="dialogVisible" title="发布岗位" width="520px">
-      <el-form :model="form" label-width="80px">
-        <el-form-item label="岗位名称"><el-input v-model="form.title" /></el-form-item>
-        <el-form-item label="城市"><el-input v-model="form.city" /></el-form-item>
-        <el-form-item label="薪资范围"><el-input v-model="form.salaryRange" placeholder="如：10k-20k" /></el-form-item>
-        <el-form-item label="岗位要求">
-          <el-input v-model="form.requirements" type="textarea" :rows="3"
-            placeholder="填写技能要求，便于智能匹配" />
-        </el-form-item>
-        <el-form-item label="岗位描述">
-          <el-input v-model="form.description" type="textarea" :rows="3" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="saveJob">发布</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
-import { jobApi, applicationApi, companyApi } from '@/api'
+import { ref, onMounted, computed } from 'vue'
+import JobSearchPanel from '@/components/JobSearchPanel.vue'
+import { jobApi, applicationApi, statsApi } from '@/api'
 import { useUserStore } from '@/stores/user'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { buildJobFilterOptions, filterJobs } from '@/utils/jobSearch'
 
 const store = useUserStore()
 const router = useRouter()
-const list = ref([])
-const keyword = ref('')
-const dialogVisible = ref(false)
-const form = reactive({ title: '', city: '', salaryRange: '', requirements: '', description: '' })
+const jobs = ref([])
+const loading = ref(false)
 const isTalent = computed(() => store.isTalent)
 const isEnterprise = computed(() => store.isEnterprise)
-const hasCompany = ref(false)
+const applyingId = ref(null)
+const stats = ref({})
+const filters = ref({
+  keyword: '',
+  city: '',
+  salaryRange: null,
+  companyName: '',
+})
+const filteredJobs = computed(() => filterJobs(jobs.value, filters.value))
+const filterOptions = computed(() => buildJobFilterOptions(jobs.value))
+const hasActiveFilters = computed(() => {
+  const hasTextFilters = Boolean(filters.value.keyword || filters.value.city || filters.value.companyName)
+  const bounds = filterOptions.value.salaryBounds
+  const range = filters.value.salaryRange
+
+  const hasSalaryFilter = Array.isArray(range)
+    && range.length === 2
+    && bounds
+    && (range[0] !== bounds.min || range[1] !== bounds.max)
+
+  return hasTextFilters || hasSalaryFilter
+})
 
 onMounted(async () => {
   loadAll()
-  if (store.isEnterprise) {
-    const r = await companyApi.getMy().catch(() => null)
-    hasCompany.value = r?.code === 200
-  }
+  const statsRes = await statsApi.public().catch(() => null)
+  if (statsRes?.code === 200) stats.value = statsRes.data
 })
 
 async function loadAll() {
-  const res = await jobApi.list()
-  if (res.code === 200) list.value = res.data
-}
-
-async function doSearch() {
-  if (!keyword.value.trim()) { loadAll(); return }
-  const res = await jobApi.list()
-  if (res.code === 200) {
-    list.value = res.data.filter(j =>
-      j.title.includes(keyword.value) ||
-      (j.requirements || '').includes(keyword.value)
-    )
+  loading.value = true
+  try {
+    const res = await jobApi.list()
+    if (res.code === 200) jobs.value = res.data
+  } finally {
+    loading.value = false
   }
 }
 
-function openCreate() {
-  if (!hasCompany.value) {
-    ElMessage.warning('请先前往"企业信息"页面完善公司资料，再发布岗位')
-    router.push('/company')
-    return
+function updateFilters(nextFilters) {
+  filters.value = {
+    ...filters.value,
+    ...nextFilters,
   }
-  Object.assign(form, { title: '', city: '', salaryRange: '', requirements: '', description: '' })
-  dialogVisible.value = true
 }
 
-async function saveJob() {
-  const res = await jobApi.create(form)
-  if (res.code === 200) {
-    ElMessage.success('发布成功')
-    dialogVisible.value = false
-    loadAll()
-  } else ElMessage.error(res.message)
+function resetFilters() {
+  filters.value = {
+    keyword: '',
+    city: '',
+    salaryRange: null,
+    companyName: '',
+  }
 }
 
 async function apply(jobId) {
+  applyingId.value = jobId
   const res = await applicationApi.apply(jobId)
-  if (res.code === 200) ElMessage.success('申请已提交')
-  else ElMessage.error(res.message)
+  applyingId.value = null
+  if (res.code === 200) {
+    ElMessage.success('申请已提交')
+  } else {
+    const msg = res.message || ''
+    if (msg.includes('人才档案')) {
+      ElMessageBox.confirm('请先创建人才档案后才能申请岗位', '提示', {
+        confirmButtonText: '前往创建',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }).then(() => {
+        router.push('/my-profile')
+      }).catch(() => {})
+    } else {
+      ElMessage.error(msg)
+    }
+  }
 }
 
 async function deleteJob(id) {
+  try {
+    await ElMessageBox.confirm('确定要删除该岗位吗？此操作不可恢复。', '确认删除', {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
   const res = await jobApi.delete(id)
   if (res.code === 200) { ElMessage.success('已删除'); loadAll() }
 }
@@ -127,12 +161,20 @@ const isMyJob = (job) => String(job.company?.user?.id) === String(store.userId)
 </script>
 
 <style scoped>
-.page-wrap { padding: 24px 40px; }
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.page-header h2 { font-size: 22px; }
-.job-card { margin-bottom: 20px; cursor: default; }
-.job-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); }
-.job-title { font-size: 16px; font-weight: bold; margin-bottom: 6px; }
-.job-company { color: #1a73e8; font-size: 14px; }
-.job-city, .job-salary { color: #666; font-size: 13px; margin-top: 4px; }
+.page-wrap { padding: 40px; max-width: 1280px; margin: 0 auto; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; gap: 24px; flex-wrap: wrap; }
+.page-title-block { flex: 1; min-width: 200px; }
+.page-header h2 { font-size: 24px; color: var(--tp-text); font-weight: 600; margin: 0 0 8px 0; }
+.page-intro { color: var(--tp-text-secondary); font-size: 14px; margin: 0 0 12px 0; line-height: 1.5; }
+.page-stats { margin-top: 4px; }
+.page-stats .el-tag { font-size: 13px; }
+.stats-filtered { font-weight: normal; opacity: 0.9; }
+.empty-with-actions { padding: 40px 20px; }
+.empty-with-actions .empty-tip { margin-bottom: 16px; color: var(--tp-text-secondary); font-size: 14px; }
+.job-card { margin-bottom: 20px; cursor: default; border-radius: var(--tp-radius); transition: box-shadow 0.2s; }
+.job-card:hover { box-shadow: var(--tp-shadow-hover); }
+.job-title { font-size: 16px; font-weight: bold; margin-bottom: 6px; color: var(--tp-text); }
+.job-company { color: var(--tp-primary); font-size: 14px; }
+.job-city, .job-salary { color: var(--tp-text-secondary); font-size: 13px; margin-top: 4px; }
+.page-wrap :deep(.el-dialog) { border-radius: var(--tp-radius); }
 </style>

@@ -35,11 +35,18 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/news/**", "/api/courses/**",
-                        "/api/talents/**", "/api/jobs/**", "/api/match/**",
-                        "/api/policies/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/stats").permitAll()
+                        "/api/jobs/**", "/api/match", 
+                        "/api/policies/**", "/api/blockchain/**",
+                        "/api/recruitment/**", "/api/stats/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/talents/my").hasAnyRole("TALENT", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/talents", "/api/talents/showcase", "/api/talents/*", "/api/match/talents")
+                        .hasAnyRole("ENTERPRISE", "ADMIN")
+                .requestMatchers("/api/ai/match-talents").hasAnyRole("ENTERPRISE", "ADMIN")
+                .requestMatchers("/api/news/**").hasRole("ADMIN")
+                .requestMatchers("/api/ai/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

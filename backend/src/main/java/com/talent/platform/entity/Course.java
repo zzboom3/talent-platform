@@ -32,6 +32,15 @@ public class Course {
     @Column(name = "cover_url", length = 200)
     private String coverUrl;
 
+    @Column(name = "video_url", length = 500)
+    private String videoUrl;
+
+    @Column
+    private Integer duration;
+
+    @Column(name = "chapter_count")
+    private Integer chapterCount;
+
     @CreationTimestamp
     @Column(name = "create_time", updatable = false)
     private LocalDateTime createTime;

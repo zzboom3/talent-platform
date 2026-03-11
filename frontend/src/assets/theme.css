@@ -1,0 +1,62 @@
+/* 京州市软件产业人才公共服务平台 - 全局主题 */
+:root {
+  /* 主色 */
+  --tp-primary: #1565c0;
+  --tp-primary-dark: #0d47a1;
+  --tp-primary-light: #42a5f5;
+  /* 辅助色 */
+  --tp-accent: #00b8d4;
+  --tp-warm: #ff8f00;
+  /* 中性色 */
+  --tp-bg: #f5f7fa;
+  --tp-card: #ffffff;
+  --tp-text: #333;
+  --tp-text-secondary: #666;
+  --tp-border: #e8ebf0;
+  /* 通用 */
+  --tp-radius: 12px;
+  --tp-radius-sm: 8px;
+  --tp-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --tp-shadow-hover: 0 4px 20px rgba(21, 101, 192, 0.15);
+  /* 页面布局 */
+  --page-max-width: 1280px;
+  --page-padding: 40px;
+}
+
+/* Element Plus 主色覆盖 */
+:root {
+  --el-color-primary: var(--tp-primary);
+  --el-color-primary-dark-2: var(--tp-primary-dark);
+  --el-color-primary-light-3: var(--tp-primary-light);
+}
+
+/* 全局基础样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  color: var(--tp-text);
+  background: var(--tp-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 统一卡片样式 */
+.el-card {
+  border-radius: var(--tp-radius);
+  box-shadow: var(--tp-shadow);
+  border: 1px solid var(--tp-border);
+}
+
+.el-card:hover {
+  box-shadow: var(--tp-shadow-hover);
+}
+
+/* 统一空状态 */
+.el-empty__description {
+  color: var(--tp-text-secondary);
+}

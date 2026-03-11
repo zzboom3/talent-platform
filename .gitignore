@@ -26,6 +26,7 @@ dist-ssr/
 .idea/
 *.iml
 .vscode/
+.cursor/
 *.suo
 *.ntvs*
 *.njsproj

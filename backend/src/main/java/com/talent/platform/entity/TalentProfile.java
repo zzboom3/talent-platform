@@ -27,8 +27,35 @@ public class TalentProfile {
     @Column(length = 100)
     private String education;
 
+    @Column(length = 20)
+    private String gender;
+
+    @Column(length = 100)
+    private String graduationSchool;
+
+    @Column(length = 100)
+    private String major;
+
+    @Column(length = 20)
+    private String workYears;
+
+    @Column(length = 100)
+    private String expectedPosition;
+
+    @Column(length = 50)
+    private String expectedSalary;
+
     @Column(columnDefinition = "TEXT")
     private String experience;
+
+    @Column(columnDefinition = "TEXT")
+    private String projectExperience;
+
+    @Column(columnDefinition = "TEXT")
+    private String selfIntroduction;
+
+    @Column(columnDefinition = "TEXT")
+    private String certificates;
 
     @Column(length = 50)
     private String city;
@@ -38,4 +65,13 @@ public class TalentProfile {
 
     @Column(length = 20)
     private String status = "ACTIVE";
+
+    @Column(nullable = false)
+    private Boolean featured = false;
+
+    @Column(name = "featured_order", columnDefinition = "INT DEFAULT 0")
+    private Integer featuredOrder = 0;
+
+    @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
+    private Boolean visible = true;
 }

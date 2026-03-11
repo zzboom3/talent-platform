@@ -2,9 +2,11 @@ package com.talent.platform.controller;
 
 import com.talent.platform.common.Result;
 import com.talent.platform.entity.Company;
+import com.talent.platform.entity.Company.AuditStatus;
 import com.talent.platform.entity.User;
 import com.talent.platform.repository.CompanyRepository;
 import com.talent.platform.repository.UserRepository;
+import com.talent.platform.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,6 +19,7 @@ public class CompanyController {
 
     private final CompanyRepository companyRepo;
     private final UserRepository userRepo;
+    private final NotificationService notificationService;
 
     @GetMapping("/my")
     public Result<Company> getMy(@AuthenticationPrincipal UserDetails userDetails) {
@@ -30,7 +33,11 @@ public class CompanyController {
         User user = userRepo.findByUsername(userDetails.getUsername()).orElseThrow();
         if (companyRepo.findByUser(user).isPresent()) return Result.fail("企业信息已存在");
         company.setUser(user);
-        return Result.ok(companyRepo.save(company));
+        company = companyRepo.save(company);
+        if (company.getAuditStatus() == AuditStatus.PENDING) {
+            notificationService.notifyCompanyPendingAudit(company);
+        }
+        return Result.ok(company);
     }
 
     @PutMapping("/{id}")
@@ -44,6 +51,20 @@ public class CompanyController {
         company.setIndustry(updated.getIndustry());
         company.setDescription(updated.getDescription());
         company.setContactEmail(updated.getContactEmail());
-        return Result.ok(companyRepo.save(company));
+        company.setContactPhone(updated.getContactPhone());
+        company.setScale(updated.getScale());
+        company.setAddress(updated.getAddress());
+        company.setWebsite(updated.getWebsite());
+        company.setLogoUrl(updated.getLogoUrl());
+        boolean resubmitted = false;
+        if (company.getAuditStatus() == AuditStatus.REJECTED) {
+            company.setAuditStatus(AuditStatus.PENDING);
+            resubmitted = true;
+        }
+        company = companyRepo.save(company);
+        if (resubmitted) {
+            notificationService.notifyCompanyPendingAudit(company);
+        }
+        return Result.ok(company);
     }
 }
