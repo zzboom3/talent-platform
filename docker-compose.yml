@@ -8,17 +8,18 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: talent_platform
       MYSQL_CHARACTER_SET_SERVER: utf8mb4
-    ports:
-      - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     restart: always
+    mem_limit: 512m
+    command: --innodb-buffer-pool-size=128M --max-connections=50
 
   backend:
     build: ./backend
     container_name: talent-backend
     depends_on:
-      - mysql
+      mysql:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/talent_platform?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: root
@@ -28,9 +29,8 @@ services:
       OSS_ACCESS_KEY_ID: ${OSS_ACCESS_KEY_ID}
       OSS_ACCESS_KEY_SECRET: ${OSS_ACCESS_KEY_SECRET}
       OSS_BUCKET_NAME: ${OSS_BUCKET_NAME:-talent-platform-files}
-    ports:
-      - "8080:8080"
     restart: always
+    mem_limit: 768m
 
   nginx:
     image: nginx:alpine
