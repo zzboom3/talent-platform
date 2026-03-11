@@ -85,25 +85,117 @@ cd backend && mvn spring-boot:run
 cd frontend && npm install && npm run dev
 ```
 
-## Docker 部署
+## Docker 一键部署
 
 ```bash
-# 1. 创建 .env 文件 (参考 .env.example)
+# 1. 创建 .env 文件
 cp .env.example .env
-# 编辑 .env 填入真实的 API Key 和 OSS 密钥
+vim .env  # 填入 DeepSeek API Key 和 OSS 密钥
 
-# 2. 构建后端
-cd backend && mvn clean package -DskipTests && cd ..
-
-# 3. 构建前端
-cd frontend && npm run build && cd ..
-
-# 4. 启动所有服务
-docker-compose up -d --build
+# 2. 一键部署
+chmod +x deploy.sh && ./deploy.sh
 ```
 
-访问: http://localhost (Nginx代理)
+访问: http://你的服务器IP（Nginx 代理）
 
-## 默认管理员账号
-- 用户名: admin
-- 密码: admin123
+## 云服务器部署指南
+
+### 第一步：购买服务器
+
+在阿里云购买**轻量应用服务器**（推荐配置如下）：
+- CPU / 内存：2核 2G（最低配置，够朋友体验）
+- 系统盘：40G SSD
+- 镜像：**Ubuntu 22.04**
+- 带宽：3-5Mbps
+- 预估费用：约 60-100 元/月（学生优惠约 24-35 元/月）
+
+购买地址：https://www.aliyun.com/product/swas
+
+> 购买后记下服务器的**公网 IP 地址**。
+
+### 第二步：注册域名（可选）
+
+在阿里云万网注册域名：https://wanwang.aliyun.com/domain
+- `.com` 约 55 元/年，`.cn` 约 29 元/年
+- 注册后进入域名控制台 → 解析设置 → 添加记录：
+  - 记录类型：**A**
+  - 主机记录：**@**（或 `www`）
+  - 记录值：填入服务器公网 IP
+
+> 注意：`.cn` 域名需完成实名认证后才能解析生效。
+
+### 第三步：服务器环境安装
+
+SSH 登录服务器后执行以下命令：
+
+```bash
+# 更新系统
+apt update && apt upgrade -y
+
+# 安装 Docker
+curl -fsSL https://get.docker.com | sh
+systemctl enable docker
+
+# 安装 Docker Compose
+apt install -y docker-compose
+
+# 安装 Git、Node.js 18、Maven
+apt install -y git maven
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+apt install -y nodejs
+
+# 验证安装
+docker --version && docker-compose --version && node -v && mvn -v
+```
+
+### 第四步：部署项目
+
+```bash
+# 克隆项目
+git clone https://github.com/zzboom3/talent-platform.git
+cd talent-platform
+
+# 配置环境变量
+cp .env.example .env
+vim .env  # 填入 DEEPSEEK_API_KEY、OSS 相关密钥
+
+# 一键部署
+chmod +x deploy.sh && ./deploy.sh
+```
+
+部署完成后通过 `http://你的公网IP` 或 `http://你的域名` 访问。
+
+### 常用运维命令
+
+```bash
+# 查看服务状态
+docker-compose ps
+
+# 查看后端日志
+docker-compose logs -f backend
+
+# 重启所有服务
+docker-compose restart
+
+# 停止所有服务
+docker-compose down
+
+# 更新代码后重新部署
+git pull && ./deploy.sh
+```
+
+## 默认账号
+
+| 角色 | 用户名 | 密码 |
+|------|--------|------|
+| 管理员 | admin | admin123 |
+| 演示企业（京州智科技术） | jingzhou_tech | demo123 |
+| 演示企业（星云数据科技） | xingyun_data | demo123 |
+| 演示企业（蓝月网络科技） | lanyue_net | demo123 |
+
+## 版本标签
+
+- `v1.0-pre-deploy`：上线前开发完成快照，可回退到此状态继续开发
+  ```bash
+  git checkout v1.0-pre-deploy  # 回到上线前的开发状态
+  ```
