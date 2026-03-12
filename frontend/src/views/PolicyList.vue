@@ -6,7 +6,7 @@
         <p class="page-intro">汇聚京州市软件产业相关资讯、政策与公告通知，方便企业和人才统一查看平台内容</p>
         <div class="page-stats">
           <el-tag type="info" effect="plain" size="large">
-            共 {{ list.length }} 条内容
+            当前分类共 {{ tabList.length }} 条内容
             <span v-if="hasActiveFilters" class="stats-filtered"> · 当前展示 {{ filteredList.length }} 条</span>
           </el-tag>
         </div>
@@ -20,7 +20,7 @@
       @reset="resetFilters"
     />
 
-    <el-tabs v-model="tab" @tab-click="load">
+    <el-tabs v-model="tab">
       <el-tab-pane label="全部" name="" />
       <el-tab-pane label="政策法规" name="POLICY" />
       <el-tab-pane label="最新资讯" name="NEWS" />
@@ -53,6 +53,7 @@
 
 <script setup>
 import { computed, ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import PolicySearchPanel from '@/components/PolicySearchPanel.vue'
 import { newsApi } from '@/api'
 import { buildPolicyFilterOptions, filterPolicies } from '@/utils/policySearch'
@@ -64,8 +65,12 @@ const filters = ref({
   keyword: '',
   sourceSite: '',
 })
-const filteredList = computed(() => filterPolicies(list.value, filters.value))
-const filterOptions = computed(() => buildPolicyFilterOptions(list.value))
+const tabList = computed(() => {
+  if (!tab.value) return list.value
+  return list.value.filter(item => item.category === tab.value)
+})
+const filteredList = computed(() => filterPolicies(tabList.value, filters.value))
+const filterOptions = computed(() => buildPolicyFilterOptions(tabList.value))
 const hasActiveFilters = computed(() => Object.values(filters.value).some(Boolean))
 
 onMounted(load)
@@ -73,8 +78,11 @@ onMounted(load)
 async function load() {
   loading.value = true
   try {
-    const res = await newsApi.list(tab.value || undefined)
+    const res = await newsApi.list()
     if (res.code === 200) list.value = res.data
+  } catch (error) {
+    list.value = []
+    ElMessage.error('加载资讯政策公告失败，请稍后重试')
   } finally {
     loading.value = false
   }
@@ -95,7 +103,7 @@ function resetFilters() {
 }
 
 const tagType = (cat) => ({ NEWS: '', POLICY: 'success', ANNOUNCE: 'warning' }[cat] || '')
-const catLabel = (cat) => ({ NEWS: '资讯', POLICY: '政策', ANNOUNCE: '公告' }[cat] || cat)
+const catLabel = (cat) => ({ NEWS: '最新资讯', POLICY: '政策法规', ANNOUNCE: '公告通知' }[cat] || cat)
 </script>
 
 <style scoped>

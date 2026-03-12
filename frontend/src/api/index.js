@@ -25,6 +25,7 @@ export const jobApi = {
 }
 
 export const companyApi = {
+  getById: (id) => request.get(`/company/detail/${id}`),
   getMy: () => request.get('/company/my'),
   create: (data) => request.post('/company', data),
   update: (id, data) => request.put(`/company/${id}`, data),
@@ -102,6 +103,8 @@ export const fileApi = {
     formData.append('directory', directory)
     return request.post('/files/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 300000,
+      skipAuthRedirect: true,
     })
   },
 }

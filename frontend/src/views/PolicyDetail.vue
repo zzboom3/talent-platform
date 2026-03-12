@@ -37,7 +37,7 @@ const htmlContent = computed(() =>
 )
 
 const tagType = (cat) => ({ NEWS: '', POLICY: 'success', ANNOUNCE: 'warning' }[cat] || '')
-const catLabel = (cat) => ({ NEWS: '资讯', POLICY: '政策', ANNOUNCE: '公告' }[cat] || cat)
+const catLabel = (cat) => ({ NEWS: '最新资讯', POLICY: '政策法规', ANNOUNCE: '公告通知' }[cat] || cat)
 </script>
 
 <style scoped>

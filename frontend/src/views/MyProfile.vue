@@ -307,7 +307,13 @@ async function uploadAvatar(option) {
       option.onError?.(new Error(res.message || '头像上传失败'))
     }
   } catch (error) {
-    ElMessage.error('头像上传失败')
+    const status = error?.response?.status
+    const message = status === 401
+      ? '登录状态已失效，请重新登录后再上传'
+      : error?.code === 'ECONNABORTED'
+        ? '头像上传超时，请稍后重试'
+        : '头像上传失败'
+    ElMessage.error(message)
     option.onError?.(error)
   } finally {
     uploadingAvatar.value = false

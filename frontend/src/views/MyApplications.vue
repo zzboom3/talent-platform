@@ -37,7 +37,15 @@
           </template>
         </el-table-column>
         <el-table-column label="企业">
-          <template #default="{ row }">{{ row.job?.company?.companyName }}</template>
+          <template #default="{ row }">
+            <el-link
+              type="primary"
+              :underline="false"
+              @click="openCompanyDetail(row.job?.company)"
+            >
+              {{ row.job?.company?.companyName || '未知企业' }}
+            </el-link>
+          </template>
         </el-table-column>
         <el-table-column label="城市" width="90">
           <template #default="{ row }">{{ row.job?.city }}</template>
@@ -105,11 +113,18 @@
         </el-table-column>
       </el-table>
     </template>
+
+    <CompanyDetailDialog
+      v-model="companyDialogVisible"
+      :company-id="activeCompany?.id"
+      :company-name="activeCompany?.companyName"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import CompanyDetailDialog from '@/components/CompanyDetailDialog.vue'
 import { applicationApi } from '@/api'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
@@ -118,6 +133,8 @@ const store = useUserStore()
 const isTalent = computed(() => store.isTalent)
 const isEnterprise = computed(() => store.isEnterprise)
 const applications = ref([])
+const companyDialogVisible = ref(false)
+const activeCompany = ref(null)
 
 onMounted(load)
 
@@ -137,6 +154,15 @@ async function updateStatus(id, status) {
     ElMessage.success(status === 'ACCEPTED' ? '已通过' : '已拒绝')
     load()
   }
+}
+
+function openCompanyDetail(company) {
+  if (!company?.id) {
+    ElMessage.warning('该企业暂无可查看的详情')
+    return
+  }
+  activeCompany.value = company
+  companyDialogVisible.value = true
 }
 
 const splitSkills = (s) => s ? s.split(/[,，]/).map(t => t.trim()).filter(Boolean).slice(0, 4) : []

@@ -9,7 +9,9 @@
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
           <h2>{{ job.title }}</h2>
-          <p style="color:#1a73e8;margin:8px 0">{{ job.company?.companyName }}</p>
+          <button type="button" class="company-trigger" @click="openCompanyDetail(job.company)">
+            {{ job.company?.companyName || '未知企业' }}
+          </button>
           <p>📍 {{ job.city || '不限' }} &nbsp;|&nbsp; 💰 {{ job.salaryRange || '薪资面议' }}</p>
         </div>
         <el-button v-if="isTalent" type="primary" size="large" :loading="applying" @click="apply">申请该岗位</el-button>
@@ -22,12 +24,19 @@
       <p style="margin-top:8px;white-space:pre-line;color:#555">{{ job.description || '暂无' }}</p>
     </el-card>
     <el-empty v-else description="岗位不存在" />
+
+    <CompanyDetailDialog
+      v-model="companyDialogVisible"
+      :company-id="activeCompany?.id"
+      :company-name="activeCompany?.companyName"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import CompanyDetailDialog from '@/components/CompanyDetailDialog.vue'
 import { jobApi, applicationApi } from '@/api'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -38,6 +47,8 @@ const job = ref(null)
 const applying = ref(false)
 const store = useUserStore()
 const isTalent = computed(() => store.isTalent)
+const companyDialogVisible = ref(false)
+const activeCompany = ref(null)
 
 onMounted(async () => {
   const res = await jobApi.getById(route.params.id)
@@ -65,6 +76,15 @@ async function apply() {
     }
   }
 }
+
+function openCompanyDetail(company) {
+  if (!company?.id) {
+    ElMessage.warning('该企业暂无可查看的详情')
+    return
+  }
+  activeCompany.value = company
+  companyDialogVisible.value = true
+}
 </script>
 
 <style scoped>
@@ -74,4 +94,14 @@ async function apply() {
 .page-wrap h2 { color: var(--tp-text); }
 .page-wrap h3 { color: var(--tp-primary); margin: 16px 0 8px; font-size: 16px; }
 .page-wrap p { color: var(--tp-text-secondary); }
+.company-trigger {
+  padding: 0;
+  margin: 8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--tp-primary);
+  cursor: pointer;
+  font: inherit;
+}
+.company-trigger:hover { text-decoration: underline; }
 </style>

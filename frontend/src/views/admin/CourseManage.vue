@@ -162,7 +162,13 @@ async function uploadCover(option) {
       option.onError?.(new Error(res.message || '封面上传失败'))
     }
   } catch (error) {
-    ElMessage.error('封面上传失败')
+    const status = error?.response?.status
+    const message = status === 401
+      ? '登录状态已失效，请重新登录后再上传'
+      : error?.code === 'ECONNABORTED'
+        ? '封面上传超时，请稍后重试'
+        : '封面上传失败'
+    ElMessage.error(message)
     option.onError?.(error)
   } finally {
     uploadingCover.value = false
@@ -220,7 +226,13 @@ async function uploadVideo(option) {
       option.onError?.(new Error(res.message || '课程视频上传失败'))
     }
   } catch (error) {
-    ElMessage.error('课程视频上传失败')
+    const status = error?.response?.status
+    const message = status === 401
+      ? '登录状态已失效，请重新登录后再上传'
+      : error?.code === 'ECONNABORTED'
+        ? '课程视频上传超时，请稍后重试'
+        : '课程视频上传失败'
+    ElMessage.error(message)
     option.onError?.(error)
   } finally {
     uploadingVideo.value = false

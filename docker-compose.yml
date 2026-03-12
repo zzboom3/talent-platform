@@ -12,7 +12,6 @@ services:
       - mysql-data:/var/lib/mysql
     restart: always
     mem_limit: 512m
-    command: --innodb-buffer-pool-size=128M --max-connections=50
 
   backend:
     build: ./backend

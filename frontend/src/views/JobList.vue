@@ -28,7 +28,13 @@
       <el-col :span="8" v-for="job in filteredJobs" :key="job.id">
         <el-card shadow="hover" class="job-card">
           <div class="job-title">{{ job.title }}</div>
-          <div class="job-company">{{ job.company?.companyName || '未知企业' }}</div>
+          <button
+            type="button"
+            class="job-company company-trigger"
+            @click="openCompanyDetail(job.company)"
+          >
+            {{ job.company?.companyName || '未知企业' }}
+          </button>
           <div class="job-city">📍 {{ job.city || '不限' }}</div>
           <div class="job-salary">💰 {{ job.salaryRange || '薪资面议' }}</div>
           <div style="margin-top:12px;display:flex;gap:8px">
@@ -48,12 +54,18 @@
       <el-button type="primary" @click="loadAll">刷新列表</el-button>
     </el-empty>
 
+    <CompanyDetailDialog
+      v-model="companyDialogVisible"
+      :company-id="activeCompany?.id"
+      :company-name="activeCompany?.companyName"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import JobSearchPanel from '@/components/JobSearchPanel.vue'
+import CompanyDetailDialog from '@/components/CompanyDetailDialog.vue'
 import { jobApi, applicationApi, statsApi } from '@/api'
 import { useUserStore } from '@/stores/user'
 import { useRouter } from 'vue-router'
@@ -68,6 +80,8 @@ const isTalent = computed(() => store.isTalent)
 const isEnterprise = computed(() => store.isEnterprise)
 const applyingId = ref(null)
 const stats = ref({})
+const companyDialogVisible = ref(false)
+const activeCompany = ref(null)
 const filters = ref({
   keyword: '',
   city: '',
@@ -157,6 +171,15 @@ async function deleteJob(id) {
   if (res.code === 200) { ElMessage.success('已删除'); loadAll() }
 }
 
+function openCompanyDetail(company) {
+  if (!company?.id) {
+    ElMessage.warning('该企业暂无可查看的详情')
+    return
+  }
+  activeCompany.value = company
+  companyDialogVisible.value = true
+}
+
 const isMyJob = (job) => String(job.company?.user?.id) === String(store.userId)
 </script>
 
@@ -175,6 +198,14 @@ const isMyJob = (job) => String(job.company?.user?.id) === String(store.userId)
 .job-card:hover { box-shadow: var(--tp-shadow-hover); }
 .job-title { font-size: 16px; font-weight: bold; margin-bottom: 6px; color: var(--tp-text); }
 .job-company { color: var(--tp-primary); font-size: 14px; }
+.company-trigger {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+.company-trigger:hover { text-decoration: underline; }
 .job-city, .job-salary { color: var(--tp-text-secondary); font-size: 13px; margin-top: 4px; }
 .page-wrap :deep(.el-dialog) { border-radius: var(--tp-radius); }
 </style>

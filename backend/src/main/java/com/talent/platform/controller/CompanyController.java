@@ -12,6 +12,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/company")
 @RequiredArgsConstructor
@@ -20,6 +23,28 @@ public class CompanyController {
     private final CompanyRepository companyRepo;
     private final UserRepository userRepo;
     private final NotificationService notificationService;
+
+    @GetMapping("/detail/{id}")
+    public Result<Map<String, Object>> getPublicById(@PathVariable Long id) {
+        return companyRepo.findById(id)
+                .filter(company -> company.getAuditStatus() == AuditStatus.APPROVED
+                        && Boolean.TRUE.equals(company.getVisible()))
+                .map(company -> {
+                    Map<String, Object> detail = new LinkedHashMap<>();
+                    detail.put("id", company.getId());
+                    detail.put("companyName", company.getCompanyName());
+                    detail.put("industry", company.getIndustry());
+                    detail.put("description", company.getDescription());
+                    detail.put("contactEmail", company.getContactEmail());
+                    detail.put("contactPhone", company.getContactPhone());
+                    detail.put("scale", company.getScale());
+                    detail.put("address", company.getAddress());
+                    detail.put("website", company.getWebsite());
+                    detail.put("logoUrl", company.getLogoUrl());
+                    return Result.ok(detail);
+                })
+                .orElse(Result.fail("企业不存在或暂未公开"));
+    }
 
     @GetMapping("/my")
     public Result<Company> getMy(@AuthenticationPrincipal UserDetails userDetails) {
